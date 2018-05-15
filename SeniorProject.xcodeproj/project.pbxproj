@@ -7,9 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A80ACF3520A6556F00F54515 /* CharacterSprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80ACF3420A6556F00F54515 /* CharacterSprite.swift */; };
+		A80ACF3820AA0FAA00F54515 /* Archer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80ACF3720AA0FAA00F54515 /* Archer.swift */; };
+		A80ACF3A20AA1BBC00F54515 /* SpearGuy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80ACF3920AA1BBC00F54515 /* SpearGuy.swift */; };
+		A80ACF3C20AA1BF500F54515 /* Knight.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80ACF3B20AA1BF500F54515 /* Knight.swift */; };
+		A80ACF3E20AA1CB000F54515 /* MountedKnight.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80ACF3D20AA1CB000F54515 /* MountedKnight.swift */; };
+		A80ACF4020AA1CF000F54515 /* Catapult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80ACF3F20AA1CF000F54515 /* Catapult.swift */; };
+		A80ACF4220AA1D5500F54515 /* Trebuchet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80ACF4120AA1D5500F54515 /* Trebuchet.swift */; };
+		A80ACF4520AB2B9600F54515 /* DefenseSprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80ACF4420AB2B9600F54515 /* DefenseSprite.swift */; };
+		A80ACF4720AB2C0A00F54515 /* Tower.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80ACF4620AB2C0A00F54515 /* Tower.swift */; };
+		A80ACF4920AB2C9B00F54515 /* Castle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80ACF4820AB2C9B00F54515 /* Castle.swift */; };
+		A827B92720A265CD0054EB02 /* Board.sks in Resources */ = {isa = PBXBuildFile; fileRef = A827B92620A265CD0054EB02 /* Board.sks */; };
 		A8BB49F520717915005C4B37 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8BB49F420717915005C4B37 /* AppDelegate.swift */; };
 		A8BB49F720717915005C4B37 /* GameScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = A8BB49F620717915005C4B37 /* GameScene.sks */; };
-		A8BB49F920717915005C4B37 /* Actions.sks in Resources */ = {isa = PBXBuildFile; fileRef = A8BB49F820717915005C4B37 /* Actions.sks */; };
 		A8BB49FB20717915005C4B37 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8BB49FA20717915005C4B37 /* GameScene.swift */; };
 		A8BB49FD20717915005C4B37 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8BB49FC20717915005C4B37 /* GameViewController.swift */; };
 		A8BB4A0020717915005C4B37 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A8BB49FE20717915005C4B37 /* Main.storyboard */; };
@@ -37,10 +47,20 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A80ACF3420A6556F00F54515 /* CharacterSprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterSprite.swift; sourceTree = "<group>"; };
+		A80ACF3720AA0FAA00F54515 /* Archer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Archer.swift; sourceTree = "<group>"; };
+		A80ACF3920AA1BBC00F54515 /* SpearGuy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpearGuy.swift; sourceTree = "<group>"; };
+		A80ACF3B20AA1BF500F54515 /* Knight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Knight.swift; sourceTree = "<group>"; };
+		A80ACF3D20AA1CB000F54515 /* MountedKnight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountedKnight.swift; sourceTree = "<group>"; };
+		A80ACF3F20AA1CF000F54515 /* Catapult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Catapult.swift; sourceTree = "<group>"; };
+		A80ACF4120AA1D5500F54515 /* Trebuchet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trebuchet.swift; sourceTree = "<group>"; };
+		A80ACF4420AB2B9600F54515 /* DefenseSprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefenseSprite.swift; sourceTree = "<group>"; };
+		A80ACF4620AB2C0A00F54515 /* Tower.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tower.swift; sourceTree = "<group>"; };
+		A80ACF4820AB2C9B00F54515 /* Castle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Castle.swift; sourceTree = "<group>"; };
+		A827B92620A265CD0054EB02 /* Board.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Board.sks; sourceTree = "<group>"; };
 		A8BB49F120717915005C4B37 /* SeniorProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SeniorProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8BB49F420717915005C4B37 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A8BB49F620717915005C4B37 /* GameScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameScene.sks; sourceTree = "<group>"; };
-		A8BB49F820717915005C4B37 /* Actions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Actions.sks; sourceTree = "<group>"; };
 		A8BB49FA20717915005C4B37 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		A8BB49FC20717915005C4B37 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		A8BB49FF20717915005C4B37 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -80,6 +100,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A80ACF3620AA0F9A00F54515 /* Characters */ = {
+			isa = PBXGroup;
+			children = (
+				A80ACF3420A6556F00F54515 /* CharacterSprite.swift */,
+				A80ACF3720AA0FAA00F54515 /* Archer.swift */,
+				A80ACF3920AA1BBC00F54515 /* SpearGuy.swift */,
+				A80ACF3B20AA1BF500F54515 /* Knight.swift */,
+				A80ACF3D20AA1CB000F54515 /* MountedKnight.swift */,
+				A80ACF3F20AA1CF000F54515 /* Catapult.swift */,
+				A80ACF4120AA1D5500F54515 /* Trebuchet.swift */,
+			);
+			path = Characters;
+			sourceTree = "<group>";
+		};
+		A80ACF4320AB2B8400F54515 /* Defenses */ = {
+			isa = PBXGroup;
+			children = (
+				A80ACF4420AB2B9600F54515 /* DefenseSprite.swift */,
+				A80ACF4620AB2C0A00F54515 /* Tower.swift */,
+				A80ACF4820AB2C9B00F54515 /* Castle.swift */,
+			);
+			path = Defenses;
+			sourceTree = "<group>";
+		};
 		A8BB49E820717915005C4B37 = {
 			isa = PBXGroup;
 			children = (
@@ -105,12 +149,14 @@
 			children = (
 				A8BB49F420717915005C4B37 /* AppDelegate.swift */,
 				A8BB49F620717915005C4B37 /* GameScene.sks */,
-				A8BB49F820717915005C4B37 /* Actions.sks */,
 				A8BB49FA20717915005C4B37 /* GameScene.swift */,
+				A80ACF3620AA0F9A00F54515 /* Characters */,
+				A80ACF4320AB2B8400F54515 /* Defenses */,
 				A8BB49FC20717915005C4B37 /* GameViewController.swift */,
 				A8BB49FE20717915005C4B37 /* Main.storyboard */,
-				A8BB4A0120717915005C4B37 /* Assets.xcassets */,
 				A8BB4A0320717915005C4B37 /* LaunchScreen.storyboard */,
+				A8BB4A0120717915005C4B37 /* Assets.xcassets */,
+				A827B92620A265CD0054EB02 /* Board.sks */,
 				A8BB4A0620717915005C4B37 /* Info.plist */,
 			);
 			path = SeniorProject;
@@ -241,11 +287,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A827B92720A265CD0054EB02 /* Board.sks in Resources */,
 				A8BB4A0020717915005C4B37 /* Main.storyboard in Resources */,
 				A8BB49F720717915005C4B37 /* GameScene.sks in Resources */,
 				A8BB4A0220717915005C4B37 /* Assets.xcassets in Resources */,
 				A8BB4A0520717915005C4B37 /* LaunchScreen.storyboard in Resources */,
-				A8BB49F920717915005C4B37 /* Actions.sks in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,9 +316,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A80ACF3520A6556F00F54515 /* CharacterSprite.swift in Sources */,
 				A8BB49FB20717915005C4B37 /* GameScene.swift in Sources */,
+				A80ACF4920AB2C9B00F54515 /* Castle.swift in Sources */,
 				A8BB49FD20717915005C4B37 /* GameViewController.swift in Sources */,
+				A80ACF4720AB2C0A00F54515 /* Tower.swift in Sources */,
 				A8BB49F520717915005C4B37 /* AppDelegate.swift in Sources */,
+				A80ACF3820AA0FAA00F54515 /* Archer.swift in Sources */,
+				A80ACF4520AB2B9600F54515 /* DefenseSprite.swift in Sources */,
+				A80ACF4020AA1CF000F54515 /* Catapult.swift in Sources */,
+				A80ACF4220AA1D5500F54515 /* Trebuchet.swift in Sources */,
+				A80ACF3A20AA1BBC00F54515 /* SpearGuy.swift in Sources */,
+				A80ACF3C20AA1BF500F54515 /* Knight.swift in Sources */,
+				A80ACF3E20AA1CB000F54515 /* MountedKnight.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
