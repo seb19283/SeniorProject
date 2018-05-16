@@ -14,6 +14,8 @@ protocol CharacterSprite {
     var range: Int { get set }
     var movement: Int { get set }
     var team: String { get set }
+    var hasMoved: Bool { get set }
+    var canAttackAfterMoving: Bool { get set }
     
     init(team: String)
     

@@ -13,6 +13,8 @@ class Knight: CharacterSprite {
     var health: Int = 3
     var range: Int = 1
     var movement: Int = 2
+    var hasMoved: Bool = false
+    var canAttackAfterMoving: Bool = true
     var team: String
     
     required init(team: String) {
@@ -25,7 +27,7 @@ class Knight: CharacterSprite {
         for row in 0..<locations.count {
             var possibleMovesInRow: [Bool] = [Bool]()
             for col in 0..<locations[row].count {
-                if locations[row][col] == -1 {
+                if locations[row][col] == 99 {
                     possibleMovesInRow.append(false)
                 } else {
                     if (col == 2 && (row > 0 && row < 4)) || (row == 2 && (col > 0 && col < 4)){

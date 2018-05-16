@@ -22,6 +22,7 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
     var resourceTileMap: SKTileMapNode = SKTileMapNode()
     var extraStuffTileMap: SKTileMapNode = SKTileMapNode()
     var defenseTileMap: SKTileMapNode = SKTileMapNode()
+    var movementTileMap: SKTileMapNode = SKTileMapNode()
     
     var landMap: [[Bool]] = [[Bool]]()
     var terrainMap: [[Int]] = [[Int]]()
@@ -29,6 +30,8 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
     var defenseMap: [[DefenseSprite?]] = [[DefenseSprite?]]()
     
     var isMoving: Bool = false
+    var touchLocations: [(Int, Int)] = [(Int, Int)]()
+    var previousTouchLocation: (row: Int, column: Int) = (0,0)
     
     override func didMove(to view: SKView) {
         super.didMove(to: view)
@@ -72,6 +75,8 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
                 extraStuffTileMap = node as! SKTileMapNode
             } else if node.name == "Defense Tiles" {
                 defenseTileMap = node as! SKTileMapNode
+            } else if node.name == "Movement Tiles" {
+                movementTileMap = node as! SKTileMapNode
             }
         }
     }
@@ -100,7 +105,7 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
                     if landMap[row][col] {
                         r.append(1)
                     } else {
-                        r.append(-1)
+                        r.append(99)
                     }
                 } else {
                     if let moveCost = tile?.userData?.value(forKey: "MovementCost") as? Int {
@@ -168,7 +173,7 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first else { return }
+        guard let touch = touches.first else { fatalError("Touches not loaded") }
 
         let touchLocation = touch.location(in: self)
         let newTouchLocation = CGPoint(x: touchLocation.x/3.5, y: touchLocation.y/3.5)
@@ -177,15 +182,73 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
         let row = charactersTileMap.tileRowIndex(fromPosition: newTouchLocation)
         
         if isMoving {
+            if touchLocations.contains(where: {$0 == row && $1 == column ? true : false}) {
+                
+                let r = previousTouchLocation.row
+                let c = previousTouchLocation.column
+                
+                guard let unit = characterMap[r][c] else {
+                    fatalError("Unit Not Available")
+                }
+                
+                var name = String(describing: unit).replacingOccurrences(of: "SeniorProject.", with: "")
+                
+                if name == "MountedKnight" {
+                    name = "Mounted Knight"
+                } else if name == "SpearGuy" {
+                    name = "Spear Guy"
+                }
+                
+                guard let characters = charactersTileMap.tileSet.tileGroups.first(where: {$0.name == "\(name)"}), let charactersTileSetRule = characters.rules.first(where: {$0.name == "Tile"}), let character = charactersTileSetRule.tileDefinitions.first(where: {$0.name == "\(name) \(unit.team)"
+                }) else {
+                    fatalError("Loading Screwed Up")
+                }
+                
+                let healthTile = movementTileMap.tileDefinition(atColumn: c, row: r)
+                
+                guard let health = healthTile?.userData?.value(forKey: "Health") as? Int else {
+                    fatalError("No Health")
+                }
+                
+                guard let healths = movementTileMap.tileSet.tileGroups.first(where: {$0.name == "Health"}) else {
+                    fatalError("Health tiles not found")
+                }
+                
+                guard let healthsTileSetRule = healths.rules.first(where: {$0.name=="Tile"}) else {
+                    fatalError("TileSetRule not found")
+                }
+                
+                guard let healthCounter = healthsTileSetRule.tileDefinitions.first(where: {$0.name == "Move \(health)"}) else {
+                    fatalError("Tile no found")
+                }
+                
+                movementTileMap.setTileGroup(nil, forColumn: c, row: r)
+                charactersTileMap.setTileGroup(nil, forColumn: c, row: r)
+                movementTileMap.setTileGroup(healths, andTileDefinition: healthCounter, forColumn: column, row: row)
+                charactersTileMap.setTileGroup(characters, andTileDefinition: character, forColumn: column, row: row)
+                
+                loadMaps()
+                
+            }
             
-        } else if let unit = characterMap[row][column] {
-            let possibleLocations = getSquare(column: column, row: row)
-            let actualLocations = unit.move(locations: possibleLocations)
+            for (r, c) in touchLocations {
+                movementTileMap.setTileGroup(nil, forColumn: c, row: r)
+            }
             
-            isMoving = true
+            isMoving = !isMoving
+            touchLocations.removeAll()
             
-            for r in 0..<5 {
-                for j in 0..<5 {
+        } else if let unit = characterMap[row][column]{
+            if !unit.hasMoved {
+                let possibleLocations = getSquare(column: column, row: row)
+                let actualLocations = unit.move(locations: possibleLocations)
+                
+                isMoving = true
+                
+                previousTouchLocation = (row, column)
+                setHighlights(col: column, row: row, locations: actualLocations, team: unit.team)
+            } else {
+                if unit.canAttackAfterMoving {
                     
                 }
             }
@@ -194,8 +257,33 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
         
     }
     
+    func setHighlights(col: Int, row: Int, locations: [[Bool]], team: String) {
+        
+        guard let highlights = movementTileMap.tileSet.tileGroups.first(where: {$0.name == "Highlight"}) else {
+            fatalError("Highlight tiles not found")
+        }
+        
+        guard let highlightsTileSetRule = highlights.rules.first(where: {$0.name=="Tile"}) else {
+            fatalError("TileSetRule not found")
+        }
+        
+        guard let highlightTeamColor = highlightsTileSetRule.tileDefinitions.first(where: {$0.name == "Highlight \(team)"}) else {
+            fatalError("Tile no found")
+        }
+        
+        for r in 0 ..< locations.count {
+            for c in 0 ..< locations[r].count {
+                if locations[r][c] {
+                    movementTileMap.setTileGroup(highlights, andTileDefinition: highlightTeamColor, forColumn: (col-2)+c, row: (row+2)-r)
+                    touchLocations.append(((row+2)-r, (col-2)+c))
+                }
+            }
+        }
+        
+    }
+    
     func getSquare(column: Int, row: Int) -> [[Int]] {
-        var possibleLocations: [[Int]] = Array(repeating: Array(repeating: -1, count: 5), count: 5)
+        var possibleLocations: [[Int]] = Array(repeating: Array(repeating: 99, count: 5), count: 5)
         
         for r in 0..<5 {
             for j in abs(2-r)...4-abs(2-r){

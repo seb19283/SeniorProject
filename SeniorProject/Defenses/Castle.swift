@@ -9,7 +9,7 @@
 import SpriteKit
 
 class Castle: DefenseSprite {
-    var health: Int = 10
+    var health: Int = 9
     var attack: Int = 4
     var range: Int = 2
     var team: String
