@@ -15,6 +15,8 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
     var cam: SKCameraNode?
     var previousPoint = CGPoint.zero
     
+    var endTurnLabel: SKLabelNode = SKLabelNode()
+    
     var waterTileMap: SKTileMapNode = SKTileMapNode()
     var landTileMap: SKTileMapNode = SKTileMapNode()
     var terrainTileMap: SKTileMapNode = SKTileMapNode()
@@ -23,15 +25,20 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
     var extraStuffTileMap: SKTileMapNode = SKTileMapNode()
     var defenseTileMap: SKTileMapNode = SKTileMapNode()
     var movementTileMap: SKTileMapNode = SKTileMapNode()
+    var highlightTileMap: SKTileMapNode = SKTileMapNode()
     
     var landMap: [[Bool]] = [[Bool]]()
     var terrainMap: [[Int]] = [[Int]]()
     var characterMap: [[CharacterSprite?]] = [[CharacterSprite?]]()
     var defenseMap: [[DefenseSprite?]] = [[DefenseSprite?]]()
+    var resourceMap: [[String]] = [[String]]()
+    var bridgeMap: [[Bool]] = [[Bool]]()
     
     var isMoving: Bool = false
+    var isAttacking: Bool = false
     var touchLocations: [(Int, Int)] = [(Int, Int)]()
     var previousTouchLocation: (row: Int, column: Int) = (0,0)
+    var turn: String = "Red"
     
     override func didMove(to view: SKView) {
         super.didMove(to: view)
@@ -42,6 +49,13 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
         
         loadSceneNodes()
         loadMaps()
+        
+        endTurnLabel = SKLabelNode(text: "End Turn")
+        endTurnLabel.fontColor = .black
+        endTurnLabel.fontName = "Chalkduster"
+        endTurnLabel.fontSize = 40
+        endTurnLabel.position = CGPoint(x: cam!.frame.width+270, y: 635)
+        cam?.addChild(endTurnLabel)
         
         let recognizer = UIPanGestureRecognizer(target: self, action: #selector(moveCamera))
         recognizer.delegate = self
@@ -77,11 +91,14 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
                 defenseTileMap = node as! SKTileMapNode
             } else if node.name == "Movement Tiles" {
                 movementTileMap = node as! SKTileMapNode
+            } else if node.name == "Highlight Tiles" {
+                highlightTileMap = node as! SKTileMapNode
             }
         }
     }
     
     func loadMaps(){
+        
         for row in 0..<landTileMap.numberOfRows {
             var r = [Bool]()
             for col in 0..<landTileMap.numberOfColumns {
@@ -159,8 +176,8 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
                     if let unit = tile?.userData?.value(forKey: "Type") as? String, let team = tile?.userData?.value(forKey: "Team") as? String {
                         if unit == "Tower" {
                             r.append(Tower(team: team))
-                        } else if unit == "Castle" {
-                            r.append(Castle(team: team))
+                        } else if unit == "Castle", let corner = tile?.userData?.value(forKey: "Corner") as? String {
+                            r.append(Castle(team: team, corner: corner))
                         }
                     } else {
                         r.append(nil)
@@ -170,18 +187,60 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
             defenseMap.append(r)
         }
         
+        for row in 0..<resourceTileMap.numberOfRows {
+            var r = [String]()
+            for col in 0..<resourceTileMap.numberOfColumns {
+                let tile = defenseTileMap.tileDefinition(atColumn: col, row: row)
+                
+                if tile == nil {
+                    r.append("")
+                } else {
+                    
+                }
+            }
+            resourceMap.append(r)
+        }
+        
+        for row in 0..<extraStuffTileMap.numberOfRows {
+            var r = [Bool]()
+            for col in 0..<extraStuffTileMap.numberOfColumns {
+                let tile = extraStuffTileMap.tileDefinition(atColumn: col, row: row)
+                
+                if tile == nil {
+                    r.append(false)
+                } else {
+                    if let _ = tile?.userData?.value(forKey: "Bridge") {
+                        r.append(true)
+                    } else {
+                        r.append(false)
+                    }
+                }
+            }
+            bridgeMap.append(r)
+        }
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { fatalError("Touches not loaded") }
-
+        
         let touchLocation = touch.location(in: self)
         let newTouchLocation = CGPoint(x: touchLocation.x/3.5, y: touchLocation.y/3.5)
+        
+        
         
         let column = charactersTileMap.tileColumnIndex(fromPosition: newTouchLocation)
         let row = charactersTileMap.tileRowIndex(fromPosition: newTouchLocation)
         
-        if isMoving {
+        if endTurnLabel.contains(touchLocation) {
+            if checkGameOver() {
+                touch.view?.isUserInteractionEnabled = false
+                gameOver()
+            } else if turn == "Red" {
+                turn = "Blue"
+            } else {
+                turn = "Red"
+            }
+        } else if isMoving || isAttacking {
             if touchLocations.contains(where: {$0 == row && $1 == column ? true : false}) {
                 
                 let r = previousTouchLocation.row
@@ -191,23 +250,11 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
                     fatalError("Unit Not Available")
                 }
                 
-                var name = String(describing: unit).replacingOccurrences(of: "SeniorProject.", with: "")
-                
-                if name == "MountedKnight" {
-                    name = "Mounted Knight"
-                } else if name == "SpearGuy" {
-                    name = "Spear Guy"
-                }
+                let name = String(describing: unit).replacingOccurrences(of: "SeniorProject.", with: "")
                 
                 guard let characters = charactersTileMap.tileSet.tileGroups.first(where: {$0.name == "\(name)"}), let charactersTileSetRule = characters.rules.first(where: {$0.name == "Tile"}), let character = charactersTileSetRule.tileDefinitions.first(where: {$0.name == "\(name) \(unit.team)"
                 }) else {
                     fatalError("Loading Screwed Up")
-                }
-                
-                let healthTile = movementTileMap.tileDefinition(atColumn: c, row: r)
-                
-                guard let health = healthTile?.userData?.value(forKey: "Health") as? Int else {
-                    fatalError("No Health")
                 }
                 
                 guard let healths = movementTileMap.tileSet.tileGroups.first(where: {$0.name == "Health"}) else {
@@ -218,39 +265,106 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
                     fatalError("TileSetRule not found")
                 }
                 
-                guard let healthCounter = healthsTileSetRule.tileDefinitions.first(where: {$0.name == "Move \(health)"}) else {
+                guard let healthCounter = healthsTileSetRule.tileDefinitions.first(where: {$0.name == "Health \(unit.health)"}) else {
                     fatalError("Tile no found")
                 }
                 
-                movementTileMap.setTileGroup(nil, forColumn: c, row: r)
-                charactersTileMap.setTileGroup(nil, forColumn: c, row: r)
-                movementTileMap.setTileGroup(healths, andTileDefinition: healthCounter, forColumn: column, row: row)
-                charactersTileMap.setTileGroup(characters, andTileDefinition: character, forColumn: column, row: row)
+                guard let highlight = highlightTileMap.tileDefinition(atColumn: column, row: row) else {
+                    fatalError("Highlight not found")
+                }
                 
-                loadMaps()
+                if let color = highlight.userData?.value(forKey: "Highlight") as? String {
+                    if color == unit.team {
+                        movementTileMap.setTileGroup(nil, forColumn: c, row: r)
+                        charactersTileMap.setTileGroup(nil, forColumn: c, row: r)
+                        charactersTileMap.setTileGroup(characters, andTileDefinition: character, forColumn: column, row: row)
+                        movementTileMap.setTileGroup(healths, andTileDefinition: healthCounter, forColumn: column, row: row)
+                        
+                        characterMap[row][column] = characterMap[r][c]
+                        characterMap[row][column]!.hasMoved = true
+                        characterMap[r][c] = nil
+                    } else {
+                        if var unit2 = characterMap[row][column] {
+                            
+                            unit2.health -= unit.attack
+                            
+                            if unit2.health <= 0 {
+                                charactersTileMap.setTileGroup(nil, forColumn: column, row: row)
+                                movementTileMap.setTileGroup(nil, forColumn: column, row: row)
+                                characterMap[row][column] = nil
+                            } else {
+                                guard let newHealth = healthsTileSetRule.tileDefinitions.first(where: {$0.name == "Health \(unit2.health)"}) else {
+                                    fatalError("New health not loaded")
+                                }
+                                
+                                movementTileMap.setTileGroup(healths, andTileDefinition: newHealth, forColumn: column, row: row)
+                            }
+                            
+                            characterMap[r][c]!.hasAttacked = true
+                            
+                        } else {
+                            
+                            if let castle = defenseMap[row][column] as? Castle {
+                                
+                                castle.health -= unit.attack
+                                
+                                if castle.health <= 0 {
+                                    touch.view?.isUserInteractionEnabled = false
+                                    gameOver()
+                                } else {
+                                    guard let newHealth = healthsTileSetRule.tileDefinitions.first(where: {$0.name == "Health \(castle.health)"}) else {
+                                        fatalError("New health not loaded")
+                                    }
+                                    
+                                    movementTileMap.setTileGroup(healths, andTileDefinition: newHealth, forColumn: column+1, row: row)
+                                }
+                                
+                            } else if let tower = defenseMap[row][column] as? Tower {
+                                //Do Tower stuff
+                            }
+                            
+                            characterMap[r][c]!.hasAttacked = true
+                            
+                        }
+                    }
+                }
                 
             }
             
             for (r, c) in touchLocations {
-                movementTileMap.setTileGroup(nil, forColumn: c, row: r)
+                highlightTileMap.setTileGroup(nil, forColumn: c, row: r)
             }
             
-            isMoving = !isMoving
+            isMoving = false
+            isAttacking = false
+            
             touchLocations.removeAll()
             
-        } else if let unit = characterMap[row][column]{
-            if !unit.hasMoved {
+        } else if let unit = characterMap[row][column], unit.team == turn{
+            if !unit.hasMoved && !unit.hasAttacked {
                 let possibleLocations = getSquare(column: column, row: row)
                 let actualLocations = unit.move(locations: possibleLocations)
+                let attackLocations = getUnitSquare(range: unit.range, column: column, row: row, team: unit.team)
                 
                 isMoving = true
                 
                 previousTouchLocation = (row, column)
-                setHighlights(col: column, row: row, locations: actualLocations, team: unit.team)
-            } else {
-                if unit.canAttackAfterMoving {
-                    
+                setHighlights(col: column-2, row: row+2, locations: actualLocations, team: unit.team)
+                
+                if unit.team == "Red" {
+                    setHighlights(col: column-unit.range, row: row+unit.range, locations: attackLocations, team: "Blue")
+                } else {
+                    setHighlights(col: column-unit.range, row: row+unit.range, locations: attackLocations, team: "Red")
                 }
+                
+            } else if unit.canAttackAfterMoving && !unit.hasAttacked && unit.hasMoved {
+                
+                let possibleLocations = getUnitSquare(range: unit.range, column: column, row: row, team: unit.team)
+                
+                setHighlights(col: column-unit.range, row: row+unit.range, locations: possibleLocations, team: unit.team)
+                
+                isAttacking = true
+                
             }
             
         }
@@ -259,7 +373,7 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
     
     func setHighlights(col: Int, row: Int, locations: [[Bool]], team: String) {
         
-        guard let highlights = movementTileMap.tileSet.tileGroups.first(where: {$0.name == "Highlight"}) else {
+        guard let highlights = highlightTileMap.tileSet.tileGroups.first(where: {$0.name == "Highlight"}) else {
             fatalError("Highlight tiles not found")
         }
         
@@ -271,15 +385,73 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
             fatalError("Tile no found")
         }
         
+        guard let highlightsLarge = highlightTileMap.tileSet.tileGroups.first(where: {$0.name == "Highlight Large"}), let highlightsLargeTileSetRule = highlightsLarge.rules.first(where: {$0.name == "Tile"}), let largeHighlightTeamColor = highlightsLargeTileSetRule.tileDefinitions.first(where: {$0.name == "Highlight \(team) Large"}) else {
+            fatalError("Large Highlights Not Loaded")
+        }
+        
         for r in 0 ..< locations.count {
             for c in 0 ..< locations[r].count {
                 if locations[r][c] {
-                    movementTileMap.setTileGroup(highlights, andTileDefinition: highlightTeamColor, forColumn: (col-2)+c, row: (row+2)-r)
-                    touchLocations.append(((row+2)-r, (col-2)+c))
+                    if let _ = defenseMap[row-r][col+c] as? Castle {
+                        highlightTileMap.setTileGroup(highlightsLarge, andTileDefinition: largeHighlightTeamColor, forColumn: col+c, row: row-r)
+                        touchLocations.append((row-r, col+c))
+                    } else {
+                        highlightTileMap.setTileGroup(highlights, andTileDefinition: highlightTeamColor, forColumn: col+c, row: row-r)
+                        touchLocations.append((row-r, col+c))
+                    }
                 }
             }
         }
         
+    }
+    
+    func checkGameOver() -> Bool {
+        for i in characterMap {
+            for character in i {
+                if character?.team != "\(turn)" {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+    
+    func gameOver() {
+        let gameOverLabel = SKLabelNode(text: "\(turn) Wins!")
+        gameOverLabel.fontColor = .black
+        gameOverLabel.fontName = "Helvetica Neue"
+        gameOverLabel.fontSize = 100
+        gameOverLabel.position = CGPoint(x: cam!.frame.midX, y: cam!.frame.midY)
+        addChild(gameOverLabel)
+    }
+    
+    func getUnitSquare(range: Int, column: Int, row: Int, team: String) -> [[Bool]] {
+        var possibleLocations: [[Bool]] = Array(repeating: Array(repeating: false, count: range*2+1), count: range*2+1)
+        
+        for r in 0..<possibleLocations.count {
+            let expression = (2*range)-abs(range-r)
+            for j in abs(range-r)...expression{
+                if let unit = characterMap[(row+range)-r][(column-range)+j], unit.team != team{
+                    possibleLocations[r][j] = true
+                } else if let defense = defenseMap[(row+range)-r][(column-range)+j], defense.team != team {
+                    if let castle = defense as? Castle {
+                        if castle.corner == "Bottom Right" {
+                            possibleLocations[r][j-1] = true
+                        } else if castle.corner == "Bottom Left" {
+                            possibleLocations[r][j] = true
+                        } else if castle.corner == "Top Right" {
+                            possibleLocations[r+1][j-1] = true
+                        } else if castle.corner == "Top Left" {
+                            possibleLocations[r+1][j] = true
+                        }
+                    } else {
+                        possibleLocations[r][j] = true
+                    }
+                }
+            }
+        }
+        
+        return possibleLocations
     }
     
     func getSquare(column: Int, row: Int) -> [[Int]] {
@@ -288,7 +460,11 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
         for r in 0..<5 {
             for j in abs(2-r)...4-abs(2-r){
                 if characterMap[(row+2)-r][(column-2)+j] == nil && defenseMap[(row+2)-r][(column-2)+j] == nil {
-                    possibleLocations[r][j] = terrainMap[(row+2)-r][(column-2)+j]
+                    if bridgeMap[(row+2)-r][(column-2)+j] {
+                        possibleLocations[r][j] = 1
+                    } else {
+                        possibleLocations[r][j] = terrainMap[(row+2)-r][(column-2)+j]
+                    }
                 }
             }
         }

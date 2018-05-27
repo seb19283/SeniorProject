@@ -14,6 +14,7 @@ class Catapult: CharacterSprite {
     var range: Int = 3
     var movement: Int = 1
     var hasMoved: Bool = false
+    var hasAttacked: Bool = false
     var canAttackAfterMoving: Bool = false
     var team: String
     

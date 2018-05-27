@@ -15,6 +15,7 @@ class Archer: CharacterSprite {
     var range: Int = 2
     var movement: Int = 2
     var hasMoved: Bool = false
+    var hasAttacked: Bool = false
     var canAttackAfterMoving: Bool = true
     var team: String
     

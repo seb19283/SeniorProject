@@ -14,6 +14,7 @@ class Trebuchet: CharacterSprite {
     var range: Int = 4
     var movement: Int = 1
     var hasMoved: Bool = false
+    var hasAttacked: Bool = false
     var canAttackAfterMoving: Bool = false
     var team: String
     

@@ -12,8 +12,9 @@ class MountedKnight: CharacterSprite {
     var attack: Int = 3
     var health: Int = 4
     var range: Int = 1
-    var movement: Int = 3
+    var movement: Int = 2
     var hasMoved: Bool = false
+    var hasAttacked: Bool = false
     var canAttackAfterMoving: Bool = true
     var team: String
     
