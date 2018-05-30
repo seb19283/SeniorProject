@@ -16,6 +16,7 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
     var previousPoint = CGPoint.zero
     
     var endTurnLabel: SKLabelNode = SKLabelNode()
+    var foodLabel: SKLabelNode = SKLabelNode()
     
     var waterTileMap: SKTileMapNode = SKTileMapNode()
     var landTileMap: SKTileMapNode = SKTileMapNode()
@@ -26,12 +27,13 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
     var defenseTileMap: SKTileMapNode = SKTileMapNode()
     var movementTileMap: SKTileMapNode = SKTileMapNode()
     var highlightTileMap: SKTileMapNode = SKTileMapNode()
+    var flagTileMap: SKTileMapNode = SKTileMapNode()
     
     var landMap: [[Bool]] = [[Bool]]()
     var terrainMap: [[Int]] = [[Int]]()
     var characterMap: [[CharacterSprite?]] = [[CharacterSprite?]]()
     var defenseMap: [[DefenseSprite?]] = [[DefenseSprite?]]()
-    var resourceMap: [[String]] = [[String]]()
+    var resourceMap: [[String?]] = [[String?]]()
     var bridgeMap: [[Bool]] = [[Bool]]()
     
     var isMoving: Bool = false
@@ -39,6 +41,11 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
     var touchLocations: [(Int, Int)] = [(Int, Int)]()
     var previousTouchLocation: (row: Int, column: Int) = (0,0)
     var turn: String = "Red"
+    
+    var redFarms = 0
+    var blueFarms = 0
+    var redFood = 100
+    var blueFood = 121
     
     override func didMove(to view: SKView) {
         super.didMove(to: view)
@@ -55,7 +62,15 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
         endTurnLabel.fontName = "Chalkduster"
         endTurnLabel.fontSize = 40
         endTurnLabel.position = CGPoint(x: cam!.frame.width+270, y: 635)
+        endTurnLabel.name = "End Turn"
         cam?.addChild(endTurnLabel)
+        
+        foodLabel = SKLabelNode(text: "\(turn) \(redFood)")
+        foodLabel.fontColor = .black
+        foodLabel.fontName = "Helvetica Neue"
+        foodLabel.fontSize = 40
+        foodLabel.position = CGPoint(x: -300, y: 635)
+        cam?.addChild(foodLabel)
         
         let recognizer = UIPanGestureRecognizer(target: self, action: #selector(moveCamera))
         recognizer.delegate = self
@@ -93,6 +108,8 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
                 movementTileMap = node as! SKTileMapNode
             } else if node.name == "Highlight Tiles" {
                 highlightTileMap = node as! SKTileMapNode
+            } else if node.name == "Flag Tiles" {
+                flagTileMap = node as! SKTileMapNode
             }
         }
     }
@@ -188,14 +205,18 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
         }
         
         for row in 0..<resourceTileMap.numberOfRows {
-            var r = [String]()
+            var r = [String?]()
             for col in 0..<resourceTileMap.numberOfColumns {
-                let tile = defenseTileMap.tileDefinition(atColumn: col, row: row)
+                let tile = resourceTileMap.tileDefinition(atColumn: col, row: row)
                 
                 if tile == nil {
-                    r.append("")
+                    r.append(nil)
                 } else {
-                    
+                    if let type = tile?.userData?.value(forKey: "Unit") as? String {
+                        r.append(type)
+                    } else {
+                        r.append(nil)
+                    }
                 }
             }
             resourceMap.append(r)
@@ -226,19 +247,35 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
         let touchLocation = touch.location(in: self)
         let newTouchLocation = CGPoint(x: touchLocation.x/3.5, y: touchLocation.y/3.5)
         
-        
-        
         let column = charactersTileMap.tileColumnIndex(fromPosition: newTouchLocation)
         let row = charactersTileMap.tileRowIndex(fromPosition: newTouchLocation)
         
-        if endTurnLabel.contains(touchLocation) {
+        let touchedNode = self.atPoint(touchLocation)
+        
+        if let name = touchedNode.name, name == endTurnLabel.name {
             if checkGameOver() {
                 touch.view?.isUserInteractionEnabled = false
                 gameOver()
             } else if turn == "Red" {
+                resetBoard(color: "Blue")
+                blueFood += blueFarms * 5
                 turn = "Blue"
+                foodLabel.text = "\(turn) \(blueFood)"
+                if checkGameOver() {
+                    touch.view?.isUserInteractionEnabled = false
+                    turn = "Red"
+                    gameOver()
+                }
             } else {
+                resetBoard(color: "Red")
+                redFood += redFarms * 5
                 turn = "Red"
+                foodLabel.text = "\(turn) \(redFood)"
+                if checkGameOver() {
+                    touch.view?.isUserInteractionEnabled = false
+                    turn = "Blue"
+                    gameOver()
+                }
             }
         } else if isMoving || isAttacking {
             if touchLocations.contains(where: {$0 == row && $1 == column ? true : false}) {
@@ -283,6 +320,32 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
                         characterMap[row][column] = characterMap[r][c]
                         characterMap[row][column]!.hasMoved = true
                         characterMap[r][c] = nil
+                        
+                        if resourceMap[row][column] == "Farm" {
+                            
+                            guard let flags = flagTileMap.tileSet.tileGroups.first(where: {$0.name == "Flag \(turn)"}) else {
+                                fatalError("No flag found")
+                            }
+                            
+                            if let _ = flagTileMap.tileDefinition(atColumn: column, row: row) {
+                                if turn == "Red" {
+                                    redFarms += 1
+                                    blueFarms -= 1
+                                } else {
+                                    redFarms -= 1
+                                    blueFarms += 1
+                                }
+                            } else {
+                                if turn == "Red" {
+                                    redFarms += 1
+                                } else {
+                                    blueFarms += 1
+                                }
+                            }
+                            
+                            flagTileMap.setTileGroup(flags, forColumn: column, row: row)
+                            
+                        }
                     } else {
                         if var unit2 = characterMap[row][column] {
                             
@@ -319,11 +382,54 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
                                     movementTileMap.setTileGroup(healths, andTileDefinition: newHealth, forColumn: column+1, row: row)
                                 }
                                 
-                            } else if let tower = defenseMap[row][column] as? Tower {
-                                //Do Tower stuff
+                            } else if var tower = defenseMap[row][column] as? Tower {
+                                
+                                if tower.team == "Neutral" {
+                                    movementTileMap.setTileGroup(nil, forColumn: c, row: r)
+                                    charactersTileMap.setTileGroup(nil, forColumn: c, row: r)
+                                    charactersTileMap.setTileGroup(characters, andTileDefinition: character, forColumn: column, row: row)
+                                    movementTileMap.setTileGroup(healths, andTileDefinition: healthCounter, forColumn: column, row: row)
+                                    
+                                    characterMap[row][column] = characterMap[r][c]
+                                    characterMap[row][column]!.hasMoved = true
+                                    characterMap[r][c] = nil
+                                    
+                                    guard let defenses = defenseTileMap.tileSet.tileGroups.first(where: {$0.name == "Tower"}) else {
+                                        fatalError("No flag found")
+                                    }
+                                    
+                                    guard let defenseTileRule = defenses.rules.first(where: {$0.name=="Tile"}) else {
+                                        fatalError("TileSetRule not found")
+                                    }
+                                    
+                                    guard let towerColor = defenseTileRule.tileDefinitions.first(where: {$0.name == "Tower \(turn)"}) else {
+                                        fatalError("Tile no found")
+                                    }
+                                    
+                                    defenseTileMap.setTileGroup(defenses, andTileDefinition: towerColor, forColumn: column, row: row)
+                                    
+                                    tower.team = turn
+                                } else if tower.team != unit.team {
+                                    tower.health -= unit.attack
+                                    
+                                    if tower.health <= 0 {
+                                        defenseTileMap.setTileGroup(nil, forColumn: column, row: row)
+                                        defenseMap[row][column] = nil
+                                    } else {
+                                        guard let newHealth = healthsTileSetRule.tileDefinitions.first(where: {$0.name == "Health \(tower.health)"}) else {
+                                            fatalError("New health not loaded")
+                                        }
+                                        
+                                        movementTileMap.setTileGroup(healths, andTileDefinition: newHealth, forColumn: column, row: row)
+                                    }
+                                    
+                                }
+                                
                             }
                             
-                            characterMap[r][c]!.hasAttacked = true
+                            if var c = characterMap[r][c] {
+                                c.hasAttacked = true
+                            }
                             
                         }
                     }
@@ -361,14 +467,36 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
                 
                 let possibleLocations = getUnitSquare(range: unit.range, column: column, row: row, team: unit.team)
                 
-                setHighlights(col: column-unit.range, row: row+unit.range, locations: possibleLocations, team: unit.team)
+                setHighlights(col: column-unit.range, row: row+unit.range, locations: possibleLocations, team: unit.team == "Red" ? "Blue" : "Red")
                 
+                previousTouchLocation = (row, column)
                 isAttacking = true
                 
             }
-            
+        } else if let tower = defenseMap[row][column], tower.team == turn {
+            if String(describing: tower) == "SeniorProject.Tower" {
+                
+            }
         }
         
+    }
+    
+    func resetBoard(color: String) {
+        for i in characterMap {
+            for j in i {
+                if var character = j, character.team == color {
+                    character.hasAttacked = false
+                    character.hasMoved = false
+                    
+                    if color == "Red" {
+                        redFood -= 3
+                    } else {
+                        blueFood -= 3
+                    }
+                    
+                }
+            }
+        }
     }
     
     func setHighlights(col: Int, row: Int, locations: [[Bool]], team: String) {
@@ -406,14 +534,24 @@ class GameScene: SKScene, UIGestureRecognizerDelegate {
     }
     
     func checkGameOver() -> Bool {
+        
+        var charThere: Bool = true
+        
         for i in characterMap {
             for character in i {
                 if character?.team != "\(turn)" {
-                    return false
+                    charThere = false
                 }
             }
         }
-        return true
+        
+        if turn == "Red" && redFood <= 0 {
+            return true
+        } else if blueFood <= 0 {
+            return true
+        }
+        
+        return charThere
     }
     
     func gameOver() {
